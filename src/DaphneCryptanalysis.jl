@@ -2,7 +2,7 @@ module DaphneCryptanalysis
 using DaphneCipher,OffsetArrays,CairoMakie
 import DaphneCipher:stepp
 import OffsetArrays:Origin
-export stepRow,nonlinearity
+export stepRow,nonlinearity,plotNonlinearity
 
 function hadamard(buf::OffsetVector{<:Real})
   tmp0=copy(buf)
@@ -50,6 +50,14 @@ function nonlinearity(bytes::OffsetVector{UInt8})
   had=hadamard(buf)
   maxNonlin=√(length(had))
   (maxNonlin-maximum(abs.(had)))/maxNonlin
+end
+
+function plotNonlinearity()
+  data=OffsetVector(fill(0.,65536),-1)
+  for i in 0:65535
+    data[i]=nonlinearity(stepRow(UInt8(i÷256),UInt8(i%256)))
+  end
+  data
 end
 
 end # module DaphneCryptanalysis
