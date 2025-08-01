@@ -57,7 +57,11 @@ function plotNonlinearity()
   @threads for i in 0:65535
     data[i]=nonlinearity(stepRow(UInt8(i÷256),UInt8(i%256)))
   end
-  data
+  nl=Figure(size=(1189,841))
+  nlax=Axis(nl[1,1],
+    title="Daphne Stepping Function Nonlinearity")
+  density!(nlax,OffsetArrays.no_offset_view(data))
+  save("daphne-nonlinearity.svg",nl)
 end
 
 end # module DaphneCryptanalysis

@@ -26,5 +26,8 @@ Manifest.toml
 # File used by Preferences
 LocalPreferences.toml
 
-#File to record debugging.
+# File to record debugging.
 debug
+
+# Files containing plots
+*.svg
