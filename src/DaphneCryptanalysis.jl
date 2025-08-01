@@ -1,5 +1,5 @@
 module DaphneCryptanalysis
-using DaphneCipher,OffsetArrays
+using DaphneCipher,OffsetArrays,CairoMakie
 import DaphneCipher:stepp
 import OffsetArrays:Origin
 export stepRow,nonlinearity
