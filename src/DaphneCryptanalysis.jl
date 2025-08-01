@@ -1,5 +1,5 @@
 module DaphneCryptanalysis
-using DaphneCipher,OffsetArrays,CairoMakie
+using DaphneCipher,Base.Threads,OffsetArrays,CairoMakie
 import DaphneCipher:stepp
 import OffsetArrays:Origin
 export stepRow,nonlinearity,plotNonlinearity
@@ -54,7 +54,7 @@ end
 
 function plotNonlinearity()
   data=OffsetVector(fill(0.,65536),-1)
-  for i in 0:65535
+  @threads for i in 0:65535
     data[i]=nonlinearity(stepRow(UInt8(i÷256),UInt8(i%256)))
   end
   data
