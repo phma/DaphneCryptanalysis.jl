@@ -48,7 +48,7 @@ function nonlinearity(bytes::OffsetVector{UInt8})
     end
   end
   had=hadamard(buf)
-  maxNonlin=√(8*length(had))
+  maxNonlin=√(length(had))
   (maxNonlin-maximum(abs.(had)))/maxNonlin
 end
 
