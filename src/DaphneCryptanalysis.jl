@@ -1,8 +1,11 @@
 module DaphneCryptanalysis
 using DaphneCipher,Base.Threads,OffsetArrays,CairoMakie
 import DaphneCipher:stepp
+import DaphneCipher:mul257
+import DaphneCipher:mulOdd
 import OffsetArrays:Origin
-export stepRow,nonlinearity,plotNonlinearity
+export stepRow,interstep,nonlinearity,sameness
+export plotNonlinearity
 
 function hadamard(buf::OffsetVector{<:Real})
   tmp0=copy(buf)
@@ -40,6 +43,14 @@ function stepRow(left::UInt8,right::UInt8)
   row
 end
 
+function interstep(left::UInt8,right::UInt8)
+  row=OffsetVector(UInt8[],-1)
+  for i in 0x00:0xff
+    push!(row,mul257[mulOdd[i,right],left])
+  end
+  row
+end
+
 function nonlinearity(bytes::OffsetVector{UInt8})
   buf=OffsetVector(Float64[],-1)
   for b in bytes
@@ -50,6 +61,10 @@ function nonlinearity(bytes::OffsetVector{UInt8})
   had=hadamard(buf)
   maxNonlin=√(length(had))
   (maxNonlin-maximum(abs.(had)))/maxNonlin
+end
+
+function sameness(a::OffsetVector{T},b::OffsetVector{T}) where T
+  count(map(==,a,b))
 end
 
 function plotNonlinearity()
