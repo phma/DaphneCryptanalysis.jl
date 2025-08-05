@@ -5,7 +5,7 @@ import DaphneCipher:mul257
 import DaphneCipher:mulOdd
 import OffsetArrays:Origin
 export stepRow,interstep,nonlinearity,sameness
-export plotNonlinearity
+export plotNonlinearity,plotSameness
 
 function hadamard(buf::OffsetVector{<:Real})
   tmp0=copy(buf)
@@ -77,6 +77,20 @@ function plotNonlinearity()
     title="Daphne Stepping Function Nonlinearity")
   density!(nlax,OffsetArrays.no_offset_view(data))
   save("daphne-nonlinearity.svg",nl)
+end
+
+function plotSameness()
+  rows=OffsetVector(fill(OffsetVector(UInt8[],-1),65536),-1)
+  #@threads for i in 0:65535
+  #  rows[i]=stepRow(UInt8(i÷256),UInt8(i%256))
+  #end
+  data=UInt32[]
+  for i in 1:65535
+    for j in 0:i-1
+      push!(data,(i<<16)+j)
+    end
+  end
+  data
 end
 
 end # module DaphneCryptanalysis
