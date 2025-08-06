@@ -84,26 +84,29 @@ function plotSameness()
   @threads for i in 0:65535
     rows[i]=stepRow(UInt8(i÷256),UInt8(i%256))
   end
-  data=UInt32[]
+  stp=UInt16[]
+  intr=UInt16[]
   k=0
   for i in 1:65535
     for j in 0:i-1
       if k%257==0
-        push!(data,(i<<16)+j)
+        push!(stp,i)
+        push!(intr,j)
       end
       k+=1
     end
   end
-  @threads for n in eachindex(data)
-    j=data[n]&0xffff
-    i=data[n]>>16
-    data[n]=sameness(rows[i],rows[j])
+  @threads for n in eachindex(stp)
+    i=stp[n]
+    j=intr[n]
+    stp[n]=sameness(rows[i],rows[j])
   end
   sam=Figure(size=(1189,841))
   samax=Axis(sam[1,1],
     title="Daphne Stepping Function Sameness")
-  hist!(samax,data,bins=-0.5:7.5)
+  hist!(samax,stp,bins=-0.5:7.5)
   save("daphne-sameness.svg",sam)
+  sum(stp)
 end
 
 end # module DaphneCryptanalysis
