@@ -86,16 +86,19 @@ function plotNonlinearity()
 end
 
 function plotSameness()
+  thinRatio=257 # 1 for all data (slow), 257 to thin the data
   rows=OffsetVector(fill(OffsetVector(UInt8[],-1),65536),-1)
+  tweens=copy(rows)
   @threads for i in 0:65535
     rows[i]=stepRow(UInt8(i÷256),UInt8(i%256))
+    tweens[i]=interstep(UInt8(i÷256),UInt8(i%256))
   end
   stp=UInt16[]
   intr=UInt16[]
   k=0
   for i in 1:65535
     for j in 0:i-1
-      if k%257==0
+      if k%thinRatio==0
         push!(stp,i)
         push!(intr,j)
       end
@@ -106,13 +109,21 @@ function plotSameness()
     i=stp[n]
     j=intr[n]
     stp[n]=sameness(rows[i],rows[j])
+    intr[n]=sameness(tweens[i],tweens[j])
   end
+  isam=Figure(size=(1189,841))
+  isamax=Axis(isam[1,1],
+    title="Daphne Interstep Sameness",
+    xlabel="Number of same bytes",
+    ylabel="Number of pairs of rows")
+  hist!(isamax,intr,bins=-0.5:maximum(intr)+.5)
+  save("daphne-interstep-sameness.svg",isam)
   sam=Figure(size=(1189,841))
   samax=Axis(sam[1,1],
     title="Daphne Stepping Function Sameness")
   hist!(samax,stp,bins=-0.5:maximum(stp)+.5)
-  save("daphne-sameness.svg",sam)
-  sum(stp)
+  save("daphne-step-sameness.svg",sam)
+  sum(stp),sum(intr)
 end
 
 end # module DaphneCryptanalysis
