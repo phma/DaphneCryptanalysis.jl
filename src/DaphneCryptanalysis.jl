@@ -85,9 +85,13 @@ function plotSameness()
     rows[i]=stepRow(UInt8(i÷256),UInt8(i%256))
   end
   data=UInt32[]
+  k=0
   for i in 1:65535
     for j in 0:i-1
-      push!(data,(i<<16)+j)
+      if k%257==0
+        push!(data,(i<<16)+j)
+      end
+      k+=1
     end
   end
   @threads for n in eachindex(data)
