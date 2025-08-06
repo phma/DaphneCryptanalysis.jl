@@ -71,11 +71,13 @@ function plotNonlinearity()
   data=OffsetVector(fill(0.,65536),-1)
   @threads for i in 0:65535
     data[i]=nonlinearity(stepRow(UInt8(i÷256),UInt8(i%256)))
-  end
+  end # Data are multiples of 1/512
+  minbar=round(minimum(data);digits=9,base=2)
+  maxbar=round(maximum(data);digits=9,base=2)
   nl=Figure(size=(1189,841))
   nlax=Axis(nl[1,1],
     title="Daphne Stepping Function Nonlinearity")
-  density!(nlax,OffsetArrays.no_offset_view(data))
+  hist!(nlax,OffsetArrays.no_offset_view(data),bins=minbar-1/1024:1/512:maxbar+1/1024)
   save("daphne-nonlinearity.svg",nl)
 end
 
