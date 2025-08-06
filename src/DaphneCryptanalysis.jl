@@ -104,7 +104,7 @@ function plotSameness()
   sam=Figure(size=(1189,841))
   samax=Axis(sam[1,1],
     title="Daphne Stepping Function Sameness")
-  hist!(samax,stp,bins=-0.5:7.5)
+  hist!(samax,stp,bins=-0.5:maximum(stp)+.5)
   save("daphne-sameness.svg",sam)
   sum(stp)
 end
