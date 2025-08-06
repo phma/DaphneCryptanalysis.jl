@@ -76,8 +76,12 @@ function plotNonlinearity()
   maxbar=round(maximum(data);digits=9,base=2)
   nl=Figure(size=(1189,841))
   nlax=Axis(nl[1,1],
-    title="Daphne Stepping Function Nonlinearity")
-  hist!(nlax,OffsetArrays.no_offset_view(data),bins=minbar-1/1024:1/512:maxbar+1/1024)
+    title="Daphne Stepping Function Nonlinearity",
+    xlabel="Nonlinearity",
+    ylabel="Number of stepping function rows")
+  hist!(nlax,OffsetArrays.no_offset_view(data),bins=minbar-1/1024:1/512:maxbar+1/1024,
+        color=:values,bar_labels=:values,
+        label_formatter=x->x<1000 ? string(round(Int,x)) : string(round(Int,x/1000))*'k')
   save("daphne-nonlinearity.svg",nl)
 end
 
