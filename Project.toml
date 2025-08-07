@@ -8,8 +8,10 @@ CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 DaphneCipher = "5549a73c-5233-4c35-946e-9042ac9299a0"
 GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
 OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
 [compat]
 CairoMakie = "0.15.4"
 GLMakie = "0.13.4"
 OffsetArrays = "1.17.0"
+Printf = "1.11.0"

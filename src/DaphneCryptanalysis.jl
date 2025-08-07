@@ -1,5 +1,5 @@
 module DaphneCryptanalysis
-using DaphneCipher,Base.Threads,OffsetArrays,CairoMakie
+using DaphneCipher,Base.Threads,OffsetArrays,CairoMakie,Printf
 import DaphneCipher:stepp
 import DaphneCipher:mul257
 import DaphneCipher:mulOdd
@@ -110,6 +110,9 @@ function plotSameness()
     j=intr[n]
     stp[n]=sameness(rows[i],rows[j])
     intr[n]=sameness(tweens[i],tweens[j])
+    if intr[n]>=35 # max is 34, attained about 68619 times
+      @printf "%04x %04x %d\n" i j intr[n]
+    end
   end
   isam=Figure(size=(1189,841))
   isamax=Axis(isam[1,1],
