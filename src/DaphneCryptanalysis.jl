@@ -123,7 +123,7 @@ function plotSameness()
     title="Daphne Stepping Function Sameness")
   hist!(samax,stp,bins=-0.5:maximum(stp)+.5)
   save("daphne-step-sameness.svg",sam)
-  sum(stp),sum(intr)
+  maximum(intr)
 end
 
 end # module DaphneCryptanalysis
