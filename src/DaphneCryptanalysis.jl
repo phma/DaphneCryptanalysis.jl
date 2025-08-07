@@ -67,6 +67,16 @@ function sameness(a::OffsetVector{T},b::OffsetVector{T}) where T
   count(map(==,a,b))
 end
 
+"""
+    plotNonlinearity()
+
+Plot a histogram of the nonlinearity of step rows. A step row is the result of
+fixing l and r in stepp(x,l,r) and running x through all 256 bytes.
+
+Most of the nonlinearities are between 7/8 (which is the nonlinearity of the S-box)
+and 15/16. The maximum conceivable nonlinearity is 0.9558, which is unattainable
+because the number of bits (2048) is not a power of 4.
+"""
 function plotNonlinearity()
   data=OffsetVector(fill(0.,65536),-1)
   @threads for i in 0:65535
@@ -85,6 +95,18 @@ function plotNonlinearity()
   save("daphne-nonlinearity.svg",nl)
 end
 
+"""
+    plotSameness()
+
+Plot histograms of the number of same bytes in different rows of both stepp(x,l,r)
+= mulOdd[sbox[mul257[x,l]],r] and interstep = mul257[mulOdd[i,r],l], which is what
+happens between successive uses of the S-box. The plot of stepp looks like a Poisson
+distribution; the maximum is 7. The plot of interstep tails off to 34, which is only
+2/15 of 255, which shows that the two multiplications do not resemble each other.
+While mul257 is a cyclic group, mulOdd is not, and their identities differ by 1.
+
+If thinRatio is 1, this uses 8 GB just for the arrays, and some more gigs for plotting.
+"""
 function plotSameness()
   thinRatio=257 # 1 for all data (slow), 257 to thin the data
   rows=OffsetVector(fill(OffsetVector(UInt8[],-1),65536),-1)
