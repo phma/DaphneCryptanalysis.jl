@@ -1,10 +1,13 @@
 module DaphneCryptanalysis
 using DaphneCipher,Base.Threads,OffsetArrays,CairoMakie,Printf
 import DaphneCipher:stepp
+import DaphneCipher:invStep
 import DaphneCipher:mul257
 import DaphneCipher:mulOdd
+import DaphneCipher:left
+import DaphneCipher:right
 import OffsetArrays:Origin
-export stepRow,interstep,nonlinearity,sameness,concoctShiftRegister
+export stepRow,interstep,nonlinearity,sameness,concoctShiftRegister,decryptOne
 export plotNonlinearity,plotSameness
 
 function hadamard(buf::OffsetVector{<:Real})
@@ -34,6 +37,9 @@ function hadamard(buf::OffsetVector{<:Real})
   end
   tmp0
 end
+
+# Tests of the S-box, preceded and followed by multiplications,
+# and of the multiplications by themselves
 
 function stepRow(left::UInt8,right::UInt8)
   row=OffsetVector(UInt8[],-1)
@@ -151,6 +157,9 @@ function plotSameness()
   maximum(intr)
 end
 
+# Chosen-ciphertext cryptanalysis, where the chosen ciphertext consists of
+# 0x00 and 0x01, and enough data are accumulated to get all accumulator values
+
 function concoctShiftRegister(bits::Integer)
   ret=UInt8[]
   for i in 1:16
@@ -158,6 +167,18 @@ function concoctShiftRegister(bits::Integer)
     bits÷=2
   end
   ret
+end
+
+function decryptOne(key::Vector{UInt8},accBits::Integer)
+  daph=Daphne()
+  daph.key=key
+  daph.sreg=concoctShiftRegister(accBits)
+  daph.acc=accBits>>16
+  l=left(daph)
+  r=right(daph)
+  plain0=invStep(0,l,r)
+  plain1=invStep(1,l,r)
+  plain1*256+plain0
 end
 
 end # module DaphneCryptanalysis
