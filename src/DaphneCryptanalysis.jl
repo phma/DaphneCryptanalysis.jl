@@ -4,7 +4,7 @@ import DaphneCipher:stepp
 import DaphneCipher:mul257
 import DaphneCipher:mulOdd
 import OffsetArrays:Origin
-export stepRow,interstep,nonlinearity,sameness
+export stepRow,interstep,nonlinearity,sameness,concoctShiftRegister
 export plotNonlinearity,plotSameness
 
 function hadamard(buf::OffsetVector{<:Real})
@@ -149,6 +149,15 @@ function plotSameness()
   hist!(samax,stp,bins=-0.5:maximum(stp)+.5)
   save("daphne-step-sameness.svg",sam)
   maximum(intr)
+end
+
+function concoctShiftRegister(bits::Integer)
+  ret=UInt8[]
+  for i in 1:16
+    push!(ret,bits&1)
+    bits÷=2
+  end
+  ret
 end
 
 end # module DaphneCryptanalysis
