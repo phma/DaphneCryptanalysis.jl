@@ -189,4 +189,39 @@ function chosenCiphertext16M(key::Vector{UInt8})
   ret
 end
 
+function chosenCiphertext16M(daph::Daphne)
+  ret=OffsetVector(fill(0x0000,16777216),-1) # decryptOne never returns 0x0000
+  full=0
+  shiftreg=0
+  i=0
+  acc=0x0
+  while full<10000000
+    ct=UInt8(rand(Bool))
+    pt=decrypt!(daph,ct)
+    if (i>16)
+      inx=acc*65536+shiftreg
+      if ret[inx]==0
+        ret[inx]=0x101*pt
+      elseif ret[inx]%0x101==0
+        if ct>0
+          newval=ret[inx]&0xff+pt*256
+        else
+          newval=ret[inx]&0xff00+pt
+        end
+        @printf "%04x %04x\n" newval ret[inx]
+        if newval!=ret[inx]
+          full+=1
+        end
+        ret[inx]=newval
+      else
+        @assert ret[inx]&0xff==pt || ret[inx]>>8==pt
+      end
+    end
+    i+=1
+    acc+=pt
+    shiftreg=(shiftreg+ct*65536)>>1
+  end
+  ret
+end
+
 end # module DaphneCryptanalysis
