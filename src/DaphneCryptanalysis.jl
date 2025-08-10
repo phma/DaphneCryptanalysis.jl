@@ -8,7 +8,7 @@ import DaphneCipher:left
 import DaphneCipher:right
 import OffsetArrays:Origin
 export stepRow,interstep,nonlinearity,sameness,concoctShiftRegister,decryptOne
-export plotNonlinearity,plotSameness
+export plotNonlinearity,plotSameness,chosenCiphertext16M
 
 function hadamard(buf::OffsetVector{<:Real})
   tmp0=copy(buf)
@@ -179,6 +179,14 @@ function decryptOne(key::Vector{UInt8},accBits::Integer)
   plain0=invStep(0,l,r)
   plain1=invStep(1,l,r)
   plain1*256+plain0
+end
+
+function chosenCiphertext16M(key::Vector{UInt8})
+  ret=OffsetVector(fill(0x0000,16777216),-1)
+  @threads for i in 0:16777215
+    ret[i]=decryptOne(key,i)
+  end
+  ret
 end
 
 end # module DaphneCryptanalysis
