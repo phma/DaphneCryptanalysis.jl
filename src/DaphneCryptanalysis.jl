@@ -8,6 +8,7 @@ import DaphneCipher:left
 import DaphneCipher:right
 import OffsetArrays:Origin
 export stepRow,interstep,nonlinearity,sameness,concoctShiftRegister,decryptOne
+export avalanche
 export plotNonlinearity,plotSameness,chosenCiphertext16M
 
 function hadamard(buf::OffsetVector{<:Real})
@@ -36,6 +37,29 @@ function hadamard(buf::OffsetVector{<:Real})
     tmp0.*=√2
   end
   tmp0
+end
+
+function avalanche(buf::OffsetVector{<:Integer},nbits::Integer=0)
+  if nbits<=0
+    nbits=count_zeros(zero(eltype(buf))) # this will error if BigInt
+  end
+  sz=length(buf)
+  szbits=count_ones(sz-1)
+  @assert ispow2(sz)
+  @assert sz>2 # 2 is too small to satisfy the strict avalanche criterion
+  ret=OffsetMatrix(fill(-sz÷4,nbits,szbits),-1,-1)
+  for i in 0:szbits-1
+    h=1<<i
+    for n in eachindex(buf)
+      if n⊻h>n
+        x=buf[n⊻h]⊻buf[n]
+        for j in 0:nbits-1
+          ret[j,i]+=(x>>j)&1
+        end
+      end
+    end
+  end
+  ret
 end
 
 # Tests of the S-box, preceded and followed by multiplications,
