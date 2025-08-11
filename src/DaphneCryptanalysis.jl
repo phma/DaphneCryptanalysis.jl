@@ -213,6 +213,33 @@ function chosenCiphertext16M(key::Vector{UInt8})
   ret
 end
 
+struct PlainAcc
+  acc		::UInt8
+  pt		::UInt8
+  ct		::UInt8
+  shiftreg	::UInt
+end
+
+keepRunning::Bool=false
+
+plainAccs=Channel{PlainAcc}(256)
+
+function chosen16MWorker(daph::Daphne)
+  shiftreg=0
+  i=0
+  acc=0x0
+  while keepRunning
+    ct=UInt8(rand(Bool))
+    pt=decrypt!(daph,ct)
+    if (i>16)
+      put!(plainAccs,PlainAcc(acc,pt,ct,shiftreg))
+    end
+    i+=1
+    acc+=pt
+    shiftreg=(shiftreg+ct*65536)>>1
+  end
+end
+
 function chosenCiphertext16M(daph::Daphne)
   ret=OffsetVector(fill(0x0000,16777216),-1) # decryptOne never returns 0x0000
   full=0
