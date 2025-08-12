@@ -253,7 +253,9 @@ function chosenCiphertext16M(daph::Daphne)
   keepRunning=true
   keepGoing=true
   println("set keepRunning")
-  push!(tasks,@spawn chosen16MWorker(deepcopy(daph)))
+  for i in 1:nthreads()
+    push!(tasks,@spawn chosen16MWorker(deepcopy(daph)))
+  end
   println("started worker")
   while keepGoing
     if full>=10000000
@@ -292,6 +294,7 @@ function chosenCiphertext16M(daph::Daphne)
       sleep(0.001)
     end
   end
+  empty!(tasks)
   ret
 end
 
