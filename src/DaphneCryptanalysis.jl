@@ -221,13 +221,14 @@ struct PlainAcc
 end
 
 keepRunning::Bool=false
-
+const tasks=Task[]
 plainAccs=Channel{PlainAcc}(256)
 
 function chosen16MWorker(daph::Daphne)
   shiftreg=0
   i=0
   acc=0x0
+  global keepRunning
   while keepRunning
     ct=UInt8(rand(Bool))
     pt=decrypt!(daph,ct)
@@ -237,40 +238,59 @@ function chosen16MWorker(daph::Daphne)
     i+=1
     acc+=pt
     shiftreg=(shiftreg+ct*65536)>>1
+    if i%81==100
+      @printf "%d  \r" i
+      flush(stdout)
+    end
   end
 end
 
 function chosenCiphertext16M(daph::Daphne)
   ret=OffsetVector(fill(0x0000,16777216),-1) # decryptOne never returns 0x0000
   full=0
-  shiftreg=0
-  i=0
-  acc=0x0
-  while full<10000000
-    ct=UInt8(rand(Bool))
-    pt=decrypt!(daph,ct)
-    if (i>16)
-      inx=acc*65536+shiftreg
+  n=0
+  global keepRunning
+  keepRunning=true
+  keepGoing=true
+  println("set keepRunning")
+  push!(tasks,@spawn chosen16MWorker(deepcopy(daph)))
+  println("started worker")
+  while keepGoing
+    if full>=10000000
+      keepRunning=false
+      if all(istaskdone.(tasks)) && !isready(plainAccs)
+	keepGoing=false
+      end
+    end
+    if isready(plainAccs)
+      pa=take!(plainAccs)
+      n+=1
+      #@printf "%c\b" "-\\|/"[n%4+1]
+      flush(stdout)
+      inx=pa.acc*65536+pa.shiftreg
       if ret[inx]==0
-        ret[inx]=0x101*pt
+        ret[inx]=0x101*pa.pt
       elseif ret[inx]%0x101==0
-        if ct>0
-          newval=ret[inx]&0xff+pt*256
+        if pa.ct>0
+          newval=ret[inx]&0xff+pa.pt*256
         else
-          newval=ret[inx]&0xff00+pt
+          newval=ret[inx]&0xff00+pa.pt
         end
-        @printf "%04x %04x\n" newval ret[inx]
+        #@printf "%04x %04x\n" newval ret[inx]
         if newval!=ret[inx]
           full+=1
+          if full%343==0
+	    @printf "%d  \r" full
+	    flush(stdout)
+	  end
         end
         ret[inx]=newval
       else
-        @assert ret[inx]&0xff==pt || ret[inx]>>8==pt
+        @assert ret[inx]&0xff==pa.pt || ret[inx]>>8==pa.pt
       end
+    else
+      sleep(0.001)
     end
-    i+=1
-    acc+=pt
-    shiftreg=(shiftreg+ct*65536)>>1
   end
   ret
 end
