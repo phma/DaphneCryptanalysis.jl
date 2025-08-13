@@ -222,18 +222,23 @@ end
 
 keepRunning::Bool=false
 const tasks=Task[]
-plainAccs=Channel{PlainAcc}(256)
+plainAccs=Channel{Vector{PlainAcc}}(256)
 
 function chosen16MWorker(daph::Daphne)
   shiftreg=0
   i=0
   acc=0x0
+  pas=PlainAcc[]
   global keepRunning
   while keepRunning
     ct=UInt8(rand(Bool))
     pt=decrypt!(daph,ct)
     if (i>16)
-      put!(plainAccs,PlainAcc(acc,pt,ct,shiftreg))
+      push!(pas,PlainAcc(acc,pt,ct,shiftreg))
+      if length(pas)>=8192
+	put!(plainAccs,pas)
+	empty!(pas)
+      end
     end
     i+=1
     acc+=pt
@@ -265,30 +270,32 @@ function chosenCiphertext16M(daph::Daphne)
       end
     end
     if isready(plainAccs)
-      pa=take!(plainAccs)
-      n+=1
-      #@printf "%c\b" "-\\|/"[n%4+1]
-      flush(stdout)
-      inx=pa.acc*65536+pa.shiftreg
-      if ret[inx]==0
-        ret[inx]=0x101*pa.pt
-      elseif ret[inx]%0x101==0
-        if pa.ct>0
-          newval=ret[inx]&0xff+pa.pt*256
-        else
-          newval=ret[inx]&0xff00+pa.pt
-        end
-        #@printf "%04x %04x\n" newval ret[inx]
-        if newval!=ret[inx]
-          full+=1
-          if full%343==0
-	    @printf "%d  \r" full
-	    flush(stdout)
+      pas=take!(plainAccs)
+      for pa in pas
+	n+=1
+	#@printf "%c\b" "-\\|/"[n%4+1]
+	#flush(stdout)
+	inx=pa.acc*65536+pa.shiftreg
+	if ret[inx]==0
+	  ret[inx]=0x101*pa.pt
+	elseif ret[inx]%0x101==0
+	  if pa.ct>0
+	    newval=ret[inx]&0xff+pa.pt*256
+	  else
+	    newval=ret[inx]&0xff00+pa.pt
 	  end
-        end
-        ret[inx]=newval
-      else
-        @assert ret[inx]&0xff==pa.pt || ret[inx]>>8==pa.pt
+	  #@printf "%04x %04x\n" newval ret[inx]
+	  if newval!=ret[inx]
+	    full+=1
+	    if full%343==0
+	      @printf "%d  \r" full
+	      flush(stdout)
+	    end
+	  end
+	  ret[inx]=newval
+	else
+	  @assert ret[inx]&0xff==pa.pt || ret[inx]>>8==pa.pt
+	end
       end
     else
       sleep(0.001)
