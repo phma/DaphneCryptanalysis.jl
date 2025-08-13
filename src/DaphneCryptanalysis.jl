@@ -205,6 +205,13 @@ function decryptOne(key::Vector{UInt8},accBits::Integer)
   plain1*256+plain0
 end
 
+"""
+    chosenCiphertext16M(key::Vector{UInt8})
+
+Given a 16-byte key, returns an OffsetVector starting at 0 of 2^24 16-bit words
+which are what a Daphne with the given key would output for each combination of
+16 bytes (all 0x00 or 0x01) of ciphertext and all 256 accumulator values.
+"""
 function chosenCiphertext16M(key::Vector{UInt8})
   ret=OffsetVector(fill(0x0000,16777216),-1)
   @threads for i in 0:16777215
@@ -250,6 +257,17 @@ function chosen16MWorker(daph::Daphne)
   end
 end
 
+"""
+    chosenCiphertext16M(daph::Daphne)
+
+Given a Daphne with a 16-byte key, returns an OffsetVector starting at 0 of 2^24
+16-bit words by feeding it ciphertext consisting of 0x00 and 0x01 and placing at
+the address corresponding to the shift register content the result of decrypting
+0x00 in the low byte and the result of decrypting 0x01 in the high byte.
+
+Currently this stops at 10^7 rather than going all the way to 2^24. I'm planning
+to make it fast enough to go all the way to 2^24.
+"""
 function chosenCiphertext16M(daph::Daphne)
   ret=OffsetVector(fill(0x0000,16777216),-1) # decryptOne never returns 0x0000
   full=0
