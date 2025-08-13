@@ -1,5 +1,5 @@
 module DaphneCryptanalysis
-using DaphneCipher,Base.Threads,OffsetArrays,CairoMakie,Printf
+using DaphneCipher,Base.Threads,OffsetArrays,CairoMakie,Printf,Statistics
 import DaphneCipher:stepp
 import DaphneCipher:invStep
 import DaphneCipher:mul257
@@ -8,7 +8,7 @@ import DaphneCipher:left
 import DaphneCipher:right
 import OffsetArrays:Origin
 export stepRow,interstep,nonlinearity,sameness,concoctShiftRegister,decryptOne
-export avalanche
+export avalanche,rms,analyzeChosenCiphertext
 export plotNonlinearity,plotSameness,chosenCiphertext16M
 
 function hadamard(buf::OffsetVector{<:Real})
@@ -60,6 +60,10 @@ function avalanche(buf::OffsetVector{<:Integer},nbits::Integer=0)
     end
   end
   ret
+end
+
+function rms(arr::AbstractArray{<:Real})
+  √mean(Float64.(arr).^2)
 end
 
 # Tests of the S-box, preceded and followed by multiplications,
@@ -321,6 +325,11 @@ function chosenCiphertext16M(daph::Daphne)
   end
   empty!(tasks)
   ret
+end
+
+function analyzeChosenCiphertext(result::OffsetVector{<:Integer})
+  pageSize=length(result)÷256
+  avalanche1=avalanche(OffsetVector(result[0:pageSize-1],-1))
 end
 
 end # module DaphneCryptanalysis
