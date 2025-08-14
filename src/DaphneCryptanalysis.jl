@@ -234,15 +234,20 @@ end
 keepRunning::Bool=false
 const tasks=Task[]
 plainAccs=Channel{Vector{PlainAcc}}(256)
+const wantedBits=Int[]
 
-function chosen16MWorker(daph::Daphne)
+function chosen16MWorker(daph::Daphne,w::Int)
   shiftreg=0
   i=0
   acc=0x0
   pas=PlainAcc[]
   global keepRunning
   while keepRunning
-    ct=UInt8(rand(Bool))
+    if i%17<16
+      ct=UInt8((wantedBits[w]>>(i%17))&1)
+    else
+      ct=UInt8(rand(Bool))
+    end
     pt=decrypt!(daph,ct)
     if (i>16)
       push!(pas,PlainAcc(acc,pt,ct,shiftreg))
@@ -276,12 +281,16 @@ function chosenCiphertext16M(daph::Daphne)
   ret=OffsetVector(fill(0x0000,16777216),-1) # decryptOne never returns 0x0000
   full=0
   n=0
+  want=0
+  th=1
   global keepRunning
   keepRunning=true
   keepGoing=true
   println("set keepRunning")
+  empty!(wantedBits)
   for i in 1:nthreads()
-    push!(tasks,@spawn chosen16MWorker(deepcopy(daph)))
+    push!(wantedBits,0)
+    push!(tasks,@spawn chosen16MWorker(deepcopy(daph),i))
   end
   println("started worker")
   while keepGoing
@@ -317,6 +326,14 @@ function chosenCiphertext16M(daph::Daphne)
 	  ret[inx]=newval
 	else
 	  @assert ret[inx]&0xff==pa.pt || ret[inx]>>8==pa.pt
+	end
+	want=(want+10368889)%16777216
+	if ret[want]%0x101==0
+	  wantedBits[th]=want
+	  th+=1
+	  if th>nthreads()
+	    th=1
+	  end
 	end
       end
     else
