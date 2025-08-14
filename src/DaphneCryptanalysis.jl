@@ -283,6 +283,7 @@ function chosenCiphertext16M(daph::Daphne)
   n=0
   want=0
   th=1
+  movavg=0.0
   global keepRunning
   keepRunning=true
   keepGoing=true
@@ -294,7 +295,7 @@ function chosenCiphertext16M(daph::Daphne)
   end
   println("started worker")
   while keepGoing
-    if full>=10000000
+    if full>=14000000
       keepRunning=false
       if all(istaskdone.(tasks)) && !isready(plainAccs)
 	keepGoing=false
@@ -307,6 +308,7 @@ function chosenCiphertext16M(daph::Daphne)
 	#@printf "%c\b" "-\\|/"[n%4+1]
 	#flush(stdout)
 	inx=pa.acc*65536+pa.shiftreg
+	movavg*=65535
 	if ret[inx]==0
 	  ret[inx]=0x101*pa.pt
 	elseif ret[inx]%0x101==0
@@ -318,8 +320,9 @@ function chosenCiphertext16M(daph::Daphne)
 	  #@printf "%04x %04x\n" newval ret[inx]
 	  if newval!=ret[inx]
 	    full+=1
+	    movavg+=1
 	    if full%343==0
-	      @printf "%d  \r" full
+	      @printf "%d %7.6f  \r" full movavg/65536
 	      flush(stdout)
 	    end
 	  end
@@ -327,6 +330,7 @@ function chosenCiphertext16M(daph::Daphne)
 	else
 	  @assert ret[inx]&0xff==pa.pt || ret[inx]>>8==pa.pt
 	end
+	movavg/=65536
 	want=(want+10368889)%16777216
 	if ret[want]%0x101==0
 	  wantedBits[th]=want
