@@ -8,7 +8,7 @@ import DaphneCipher:left
 import DaphneCipher:right
 import OffsetArrays:Origin
 export stepRow,interstep,nonlinearity,sameness,concoctShiftRegister,decryptOne
-export avalanche,rms,analyzeChosenCiphertext
+export avalanche,rms,analyzeChosenCiphertext,showMissingAcc
 export plotNonlinearity,plotSameness,chosenCiphertext16M
 
 function hadamard(buf::OffsetVector{<:Real})
@@ -348,6 +348,26 @@ function chosenCiphertext16M(daph::Daphne)
   end
   empty!(tasks)
   ret
+end
+
+function showMissingAcc()
+  shiftreg=0x56b9 # this was in wantedBits, wanting acc=0x76
+  daph=Daphne()
+  setKey!(daph,concoctShiftRegister(59049))
+  finalAcc=OffsetVector(UInt8[],-1)
+  for acc in 0:255
+    daph.sreg=daph.key
+    daph.acc=acc
+    for i in 0:15
+      ct=UInt8((shiftreg>>i)&1)
+      pt=decrypt!(daph,ct)
+    end
+    push!(finalAcc,daph.acc)
+    @printf "%02x " daph.acc
+    if acc%16==15
+      println()
+    end
+  end
 end
 
 function analyzeChosenCiphertext(result::OffsetVector{<:Integer})
