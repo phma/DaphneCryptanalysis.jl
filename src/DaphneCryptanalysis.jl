@@ -372,7 +372,13 @@ end
 
 function analyzeChosenCiphertext(result::OffsetVector{<:Integer})
   pageSize=length(result)÷256
-  avalanche1=avalanche(OffsetVector(result[0:pageSize-1],-1))
+  aval1=avalanche(OffsetVector(result[0:pageSize-1],-1))
+  sz=size(aval1)
+  avals=OffsetArray(Array{Int}(undef,sz[1],sz[2],256),-1,-1,-1)
+  for i in 0:255
+    avals[:,:,i]=avalanche(OffsetVector(result[i*pageSize:(i+1)*pageSize-1],-1))
+  end
+  avals
 end
 
 end # module DaphneCryptanalysis
