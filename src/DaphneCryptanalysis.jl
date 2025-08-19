@@ -1,5 +1,6 @@
 module DaphneCryptanalysis
 using DaphneCipher,Base.Threads,OffsetArrays,CairoMakie,Printf,Statistics
+import Base:get
 import DaphneCipher:stepp
 import DaphneCipher:invStep
 import DaphneCipher:mul257
@@ -10,6 +11,7 @@ import OffsetArrays:Origin
 export stepRow,interstep,nonlinearity,sameness,concoctShiftRegister,decryptOne
 export avalanche,rms,analyzeChosenCiphertext,showMissingAcc
 export plotNonlinearity,plotSameness,chosenCiphertext16M
+export Kind,BiStream,null,random,sequential
 
 function hadamard(buf::OffsetVector{<:Real})
   tmp0=copy(buf)
@@ -379,6 +381,60 @@ function analyzeChosenCiphertext(result::OffsetVector{<:Integer})
     avals[:,:,i]=avalanche(OffsetVector(result[i*pageSize:(i+1)*pageSize-1],-1))
   end
   avals
+end
+
+# Chosen-plaintext attack, where the same plaintext is fed to two copies of a
+# Daphne, except that two bytes at the start are (ex)changed so that the
+# fedback ciphertext is different but the accumulator is the same.
+
+@enum Kind null=0 random sequential
+
+mutable struct BiStream
+  buf		::Vector{UInt8}
+  kind		::Kind
+  swapState	::Int8
+  last		::UInt8
+  BiStream(k)=new([],k,0,0x0)
+end
+
+function _get(bs::BiStream)
+  newByte=0x0
+  if bs.kind==null
+    newByte=bs.swapState>0 ? 0x0 : rand(UInt8)
+  elseif bs.kind==random
+    newByte=rand(UInt8)
+  elseif bs.kind==sequential
+    newByte=bs.last
+    bs.last+=1
+  else
+    error("Unhandled kind")
+  end
+  push!(bs.buf,newByte)
+end
+
+function get(bs::BiStream)
+  pair=(0x0,0x0)
+  while bs.swapState==2 && length(bs.buf)<1 || length(bs.buf)<2
+    _get(bs)
+  end
+  if bs.swapState==0
+    if bs.buf[1]!=bs.buf[2]
+      bs.swapState=1
+    end
+    pair=(bs.buf[1],bs.buf[2])
+    if bs.swapState==0
+      popfirst!(bs.buf)
+    end
+  elseif bs.swapState==1
+    pair=(bs.buf[2],bs.buf[1])
+    bs.swapState=2
+    popfirst!(bs.buf)
+    popfirst!(bs.buf)
+  else
+    pair=(bs.buf[1],bs.buf[1])
+    popfirst!(bs.buf)
+  end
+  pair
 end
 
 end # module DaphneCryptanalysis
