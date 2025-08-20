@@ -449,11 +449,17 @@ function chosenPlaintext!(daph::Daphne,bs::BiStream)
   daph0=deepcopy(daph)
   daph1=deepcopy(daph)
   result=OffsetMatrix(fill(0,256,256),-1,-1)
-  for i in 1:16777216
+  i=0::Int64
+  stoptime=0::Int64
+  while (stoptime==0 || i<stoptime) && i<2::Int64^32
     (a,b)=get(bs)
     c=encrypt!(daph0,a)
     d=encrypt!(daph1,b)
     result[c,d]+=1
+    i+=1
+    if stoptime==0 && abs(result[i&255,(i>>8)&255]-i/65536)>7√(i/65536)+16
+      stoptime=2i
+    end
   end
   result
 end
