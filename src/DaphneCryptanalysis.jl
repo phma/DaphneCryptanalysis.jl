@@ -11,7 +11,7 @@ import OffsetArrays:Origin
 export stepRow,interstep,nonlinearity,sameness,concoctShiftRegister,decryptOne
 export avalanche,rms,analyzeChosenCiphertext,showMissingAcc
 export plotNonlinearity,plotSameness,chosenCiphertext16M,chosenPlaintext!
-export Kind,BiStream,null,random,sequential
+export Kind,BiStream,null,random,sequential,plotChosenPlaintext
 
 function hadamard(buf::OffsetVector{<:Real})
   tmp0=copy(buf)
@@ -462,6 +462,14 @@ function chosenPlaintext!(daph::Daphne,bs::BiStream)
     end
   end
   result
+end
+
+function plotChosenPlaintext(data::OffsetMatrix{<:Integer})
+  cp=Figure(size=(1189,841))
+  cphmax=Axis(cp[1,1],
+    title="Daphne Chosen Plaintext Heatmap")
+  heatmap!(cphmax,0:255,0:255,OffsetArrays.no_offset_view(data))
+  save("daphne-chosen-plaintext.svg",cp)
 end
 
 end # module DaphneCryptanalysis
