@@ -465,10 +465,13 @@ function chosenPlaintext!(daph::Daphne,bs::BiStream)
 end
 
 function plotChosenPlaintext(data::OffsetMatrix{<:Integer})
-  cp=Figure(size=(1189,841))
+  cp=Figure(size=(841,1189))
   cphmax=Axis(cp[1,1],
     title="Daphne Chosen Plaintext Heatmap")
+  cpdax=Axis(cp[2,1],
+    title="Daphne Chosen Plaintext Density")
   heatmap!(cphmax,0:255,0:255,OffsetArrays.no_offset_view(data))
+  density!(cpdax,reshape(OffsetArrays.no_offset_view(data),65536))
   save("daphne-chosen-plaintext.svg",cp)
 end
 
