@@ -464,7 +464,7 @@ function chosenPlaintext!(daph::Daphne,bs::BiStream)
   result
 end
 
-function plotChosenPlaintext(data::OffsetMatrix{<:Integer})
+function plotChosenPlaintext(data::OffsetMatrix{<:Integer},daph::Daphne,kind::Kind)
   cp=Figure(size=(841,1189))
   cphmax=Axis(cp[1,1],
     title="Daphne Chosen Plaintext Heatmap")
@@ -472,7 +472,17 @@ function plotChosenPlaintext(data::OffsetMatrix{<:Integer})
     title="Daphne Chosen Plaintext Density")
   heatmap!(cphmax,0:255,0:255,OffsetArrays.no_offset_view(data))
   density!(cpdax,reshape(OffsetArrays.no_offset_view(data),65536))
-  save("daphne-chosen-plaintext.svg",cp)
+  if kind==null
+    kindstr="nul"
+  elseif kind==random
+    kindstr="rnd"
+  elseif kind==sequential
+    kindstr="seq"
+  else
+    kindstr="???"
+  end
+  filename=@sprintf "daphne-%d-chosen-plaintext-%s-%d.svg" length(daph.key) kindstr sum(data)
+  save(filename,cp)
 end
 
 end # module DaphneCryptanalysis
