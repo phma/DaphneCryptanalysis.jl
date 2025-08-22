@@ -12,6 +12,7 @@ export stepRow,interstep,nonlinearity,sameness,concoctShiftRegister,decryptOne
 export avalanche,rms,analyzeChosenCiphertext,showMissingAcc
 export plotNonlinearity,plotSameness,chosenCiphertext16M,chosenPlaintext!
 export Kind,BiStream,null,random,sequential,plotChosenPlaintext
+export chosenPlaintextOneKey
 
 function hadamard(buf::OffsetVector{<:Real})
   tmp0=copy(buf)
@@ -483,6 +484,14 @@ function plotChosenPlaintext(data::OffsetMatrix{<:Integer},daph::Daphne,kind::Ki
   end
   filename=@sprintf "daphne-%d-chosen-plaintext-%s-%d.svg" length(daph.key) kindstr sum(data)
   save(filename,cp)
+end
+
+function chosenPlaintextOneKey(daph::Daphne)
+  for kind in [null,random,sequential]
+    data=chosenPlaintext!(daph,BiStream(kind))
+    println(daph.key,' ',kind)
+    plotChosenPlaintext(data,daph,kind)
+  end
 end
 
 end # module DaphneCryptanalysis
