@@ -191,6 +191,21 @@ end
 # Chosen-ciphertext cryptanalysis, where the chosen ciphertext consists of
 # 0x00 and 0x01, and enough data are accumulated to get all accumulator values
 
+# This is 1-based because 0x0000 is not a possible output of decryptOne,
+# nor is 0xffff, or any other multiple of 0x0101.
+const inversePlain01=fill(UInt16[],65534)
+
+for i in eachindex(inversePlain01)
+  inversePlain01[i]=copy(inversePlain01[i])
+end
+
+for l in 0x00:0xff
+  for r in 0x00:0xff
+    i=invStep(1,l,r)*256+invStep(0,l,r)
+    push!(inversePlain01[i],l*0x100+r)
+  end
+end
+
 function concoctShiftRegister(bits::Integer)
   ret=UInt8[]
   for i in 1:16
