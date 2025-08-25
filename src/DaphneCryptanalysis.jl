@@ -466,6 +466,10 @@ function chosenPlaintext!(daph::Daphne,bs::BiStream)
   daph1=deepcopy(daph)
   period0=0
   period1=0
+  state0=state1=UInt64(0)
+  fiba=1
+  fibb=2
+  state0a=state0b=state1a=state1b=UInt64(0)
   result=OffsetMatrix(fill(0,256,256),-1,-1)
   i=0::Int64
   stoptime=0::Int64
@@ -473,8 +477,35 @@ function chosenPlaintext!(daph::Daphne,bs::BiStream)
     (a,b)=get(bs)
     c=encrypt!(daph0,a)
     d=encrypt!(daph1,b)
+    state0=state0*0x100+c
+    state1=state1*0x100+d
     result[c,d]+=1
     i+=1
+    periodc=0
+    if state0a==state0 && i>8
+      periodc=i-fiba
+    end
+    if state0b==state0 && i>8
+      periodc=i-fibb
+    end
+    if periodc>0
+      period0=gcd(period0,periodc)
+    end
+    periodc=0
+    if state1a==state1 && i>8
+      periodc=i-fiba
+    end
+    if state1b==state1 && i>8
+      periodc=i-fibb
+    end
+    if periodc>0
+      period1=gcd(period1,periodc)
+    end
+    if i==fiba+fibb
+      fiba,fibb=fibb,fiba+fibb
+      state0a,state0b=state0b,state0
+      state1a,state1b=state1b,state1
+    end
     if stoptime==0 && abs(result[i&255,(i>>8)&255]-i/65536)>7√(i/65536)+16
       stoptime=2i
     end
