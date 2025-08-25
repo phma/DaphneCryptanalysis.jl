@@ -464,6 +464,8 @@ but `daph` is not.
 function chosenPlaintext!(daph::Daphne,bs::BiStream)
   daph0=deepcopy(daph)
   daph1=deepcopy(daph)
+  period0=0
+  period1=0
   result=OffsetMatrix(fill(0,256,256),-1,-1)
   i=0::Int64
   stoptime=0::Int64
@@ -477,7 +479,7 @@ function chosenPlaintext!(daph::Daphne,bs::BiStream)
       stoptime=2i
     end
   end
-  result
+  (result,period0,period1)
 end
 
 function plotChosenPlaintext(data::OffsetMatrix{<:Integer},daph::Daphne,kind::Kind)
@@ -503,7 +505,7 @@ end
 
 function chosenPlaintextOneKey(daph::Daphne)
   for kind in [null,random,sequential]
-    data=chosenPlaintext!(daph,BiStream(kind))
+    (data,period0,period1)=chosenPlaintext!(daph,BiStream(kind))
     println(daph.key,' ',kind)
     plotChosenPlaintext(data,daph,kind)
   end
