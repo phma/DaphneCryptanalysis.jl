@@ -1,5 +1,5 @@
 module DaphneCryptanalysis
-using DaphneCipher,Base.Threads,OffsetArrays,CairoMakie,Printf,Statistics
+using DaphneCipher,Base.Threads,CpuId,OffsetArrays,CairoMakie,Printf,Statistics
 import Base:get
 import DaphneCipher:stepp
 import DaphneCipher:invStep
