@@ -513,10 +513,17 @@ function chosenPlaintext!(daph::Daphne,bs::BiStream)
   (result,period0,period1)
 end
 
-function plotChosenPlaintext(data::OffsetMatrix{<:Integer},daph::Daphne,kind::Kind)
+function plotChosenPlaintext(data::OffsetMatrix{<:Integer},daph::Daphne,
+			     kind::Kind,period0::Integer,period1::Integer)
   cp=Figure(size=(841,1189))
   cphmax=Axis(cp[1,1],
     title="Daphne Chosen Plaintext Heatmap")
+  if period0>0
+    cphmax.ylabel="Period "*string(period0)
+  end
+  if period1>0
+    cphmax.xlabel="Period "*string(period1)
+  end
   cpdax=Axis(cp[2,1],
     title="Daphne Chosen Plaintext Density")
   heatmap!(cphmax,0:255,0:255,OffsetArrays.no_offset_view(data))
