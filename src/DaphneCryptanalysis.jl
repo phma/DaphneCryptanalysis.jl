@@ -10,6 +10,7 @@ import DaphneCipher:right
 import OffsetArrays:Origin
 export stepRow,interstep,nonlinearity,sameness,concoctShiftRegister,decryptOne
 export avalanche,rms,analyzeChosenCiphertext,showMissingAcc
+export debugChosenCiphertext
 export plotNonlinearity,plotSameness,chosenCiphertext16M,chosenPlaintext!
 export Kind,BiStream,null,random,sequential,plotChosenPlaintext
 export chosenPlaintextOneKey,measureSpeed
@@ -377,6 +378,54 @@ function chosenCiphertext16M(daph::Daphne)
   end
   empty!(tasks)
   ret
+end
+
+function debugChosenCiphertext(daph::Daphne)
+  counts=OffsetVector(fill(0,65536),-1) # decryptOne never returns 0x0000
+  full=0
+  n=0
+  want=0
+  th=1
+  global keepRunning
+  keepRunning=true
+  keepGoing=true
+  println("set keepRunning")
+  empty!(wantedBits)
+  for i in 1:nthreads()
+    push!(wantedBits,0x9669*(i-1))
+    push!(tasks,@spawn chosen16MWorker(deepcopy(daph),i))
+  end
+  println("started worker")
+  while keepGoing
+    if full>=65536 || !keepRunning
+      # It would approach 1/4352 if all accumulator values were possible for
+      # each shift register value, but they aren't.
+      keepRunning=false
+      if all(istaskdone.(tasks)) && !isready(plainAccs)
+	keepGoing=false
+      end
+    end
+    if isready(plainAccs)
+      pas=take!(plainAccs)
+      for pa in pas
+	n+=1
+	#@printf "%c\b" "-\\|/"[n%4+1]
+	#flush(stdout)
+	inx=pa.acc*65536+pa.shiftreg
+	counts[pa.shiftreg]+=1
+	full+=1
+	if full%343==0
+	  @printf "%d  \r" full
+	  flush(stdout)
+	end
+	want=(want+10368889)%16777216
+      end
+    else
+      sleep(0.001)
+    end
+  end
+  empty!(tasks)
+  counts
 end
 
 function showMissingAcc()
