@@ -380,7 +380,7 @@ function chosenCiphertext16M(daph::Daphne)
 end
 
 function showMissingAcc()
-  shiftreg=0x56b9 # this was in wantedBits, wanting acc=0x76
+  shiftreg=0x6113 # this was in wantedBits, wanting acc=0xfc
   daph=Daphne()
   setKey!(daph,concoctShiftRegister(59049))
   finalAcc=OffsetVector(UInt32[],-1)
