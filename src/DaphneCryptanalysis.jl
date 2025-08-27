@@ -12,7 +12,7 @@ export stepRow,interstep,nonlinearity,sameness,concoctShiftRegister,decryptOne
 export avalanche,rms,analyzeChosenCiphertext,showMissingAcc
 export plotNonlinearity,plotSameness,chosenCiphertext16M,chosenPlaintext!
 export Kind,BiStream,null,random,sequential,plotChosenPlaintext
-export chosenPlaintextOneKey
+export chosenPlaintextOneKey,measureSpeed
 
 function hadamard(buf::OffsetVector{<:Real})
   tmp0=copy(buf)
@@ -67,6 +67,17 @@ end
 
 function rms(arr::AbstractArray{<:Real})
   √mean(Float64.(arr).^2)
+end
+
+function measureSpeed(keySize::Integer,numBytes::Integer)
+  daph=Daphne()
+  setKey!(daph,rand(UInt8,keySize))
+  start=cpucycle()
+  for i in 1:numBytes
+    encrypt!(daph,UInt8(i&255))
+  end
+  finish=cpucycle()
+  (finish-start)/numBytes
 end
 
 # Tests of the S-box, preceded and followed by multiplications,
