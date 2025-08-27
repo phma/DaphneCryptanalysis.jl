@@ -272,7 +272,7 @@ function chosen16MWorker(daph::Daphne,w::Int)
   pas=PlainAcc[]
   global keepRunning
   while keepRunning
-    if i%23<16
+    if i%32<16
       ct=UInt8((wantedBits[w]>>(i%17))&1)
     else
       ct=UInt8(rand(Bool))
