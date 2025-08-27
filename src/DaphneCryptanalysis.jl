@@ -528,7 +528,11 @@ function plotChosenPlaintext(data::OffsetMatrix{<:Integer},daph::Daphne,
 			     kind::Kind,period0::Integer,period1::Integer)
   cp=Figure(size=(841,1189))
   cphmax=Axis(cp[1,1],
-    title="Daphne Chosen Plaintext Heatmap")
+    title="Daphne Chosen Plaintext Heatmap",
+    xticks=0:51:255,
+    xtickformat="{:02x}",
+    ytickformat="{:02x}",
+    yticks=0:51:255)
   if period0>0
     cphmax.ylabel="Period "*string(period0)
   end
