@@ -403,6 +403,20 @@ function showMissingAcc()
       println()
     end
   end
+  found=OffsetVector(fill(0,256),-1)
+  for i in finalAcc
+    for j in 0:3
+      found[i&255]+=1
+      i÷=256
+    end
+  end
+  print("Missing:")
+  for i in eachindex(finalAcc)
+    if finalAcc[i]==0
+      @printf " %02x" i
+    end
+  end
+  println()
 end
 
 function analyzeChosenCiphertext(result::OffsetVector{<:Integer})
