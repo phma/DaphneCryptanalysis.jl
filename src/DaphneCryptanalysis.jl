@@ -383,16 +383,22 @@ function showMissingAcc()
   shiftreg=0x56b9 # this was in wantedBits, wanting acc=0x76
   daph=Daphne()
   setKey!(daph,concoctShiftRegister(59049))
-  finalAcc=OffsetVector(UInt8[],-1)
+  finalAcc=OffsetVector(UInt32[],-1)
+  n=0
+  accs=0x00000
   for acc in 0:255
-    daph.sreg=daph.key
-    daph.acc=acc
-    for i in 0:15
-      ct=UInt8((shiftreg>>i)&1)
-      pt=decrypt!(daph,ct)
+    for i in 0:3
+      daph.sreg=concoctShiftRegister(n)
+      n+=40503 # 65536/φ
+      daph.acc=acc
+      for i in 0:15
+	ct=UInt8((shiftreg>>i)&1)
+	pt=decrypt!(daph,ct)
+      end
+      accs=accs*0x100+daph.acc
     end
-    push!(finalAcc,daph.acc)
-    @printf "%02x " daph.acc
+    push!(finalAcc,accs)
+    @printf "%08x " accs
     if acc%16==15
       println()
     end
