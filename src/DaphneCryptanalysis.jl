@@ -325,7 +325,7 @@ function chosenCiphertext16M(daph::Daphne)
   end
   println("started worker")
   while keepGoing
-    if full>=16777216 || movavg<1/21760 || !keepRunning
+    if full>=16777216 || movavg<1/87040 || !keepRunning
       # It would approach 1/4352 if all accumulator values were possible for
       # each shift register value, but they aren't.
       keepRunning=false
